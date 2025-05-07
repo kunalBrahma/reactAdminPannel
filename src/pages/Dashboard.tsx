@@ -23,6 +23,8 @@ import ServicesSecction from "./OfferingsPage";
 import UpdateBooking from "@/components/sections/UpdateBooking";
 import Users from "@/components/sections/Users";
 import AdminRequest from "@/components/sections/AdminRequest";
+import ConatctUs from "@/components/sections/ConatctUs";
+import Coupons from "@/components/sections/Coupons";
 
 // Define your content components
 const DefaultContent = () => <DashboardOverview />;
@@ -71,7 +73,8 @@ export default function Page() {
     "Update Booking Status": <UpdateBooking />,
     Profiles : <Users />,
     "Admin Request": <AdminRequest />,
-    
+    "Contact Us": <ConatctUs />,
+    "Add Coupons": <Coupons />,
   };
 
   const renderContent = () => {

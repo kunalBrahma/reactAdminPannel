@@ -1,5 +1,11 @@
 // OfferingDetailsModal.tsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Offering } from "@/types/offering";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,11 +17,18 @@ interface OfferingDetailsModalProps {
   offering: Offering | null;
 }
 
-export function OfferingDetailsModal({ open, onOpenChange, offering }: OfferingDetailsModalProps) {
+export function OfferingDetailsModal({
+  open,
+  onOpenChange,
+  offering,
+}: OfferingDetailsModalProps) {
   if (!offering) return null;
 
   // Helper function to parse JSON fields
-  const parseJsonField = <T,>(field: string | undefined, defaultValue: T): T => {
+  const parseJsonField = <T,>(
+    field: string | undefined,
+    defaultValue: T
+  ): T => {
     if (!field) return defaultValue;
     try {
       return typeof field === "string" ? JSON.parse(field) : field;
@@ -34,7 +47,9 @@ export function OfferingDetailsModal({ open, onOpenChange, offering }: OfferingD
       <DialogContent className="sm:max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{offering.name}</DialogTitle>
-          <DialogDescription>Service Code: {offering.service_code}</DialogDescription>
+          <DialogDescription>
+            Service Code: {offering.service_code}
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-4">
           <Card>
@@ -74,7 +89,9 @@ export function OfferingDetailsModal({ open, onOpenChange, offering }: OfferingD
                         alt="Service Image"
                         className="mt-2 max-w-[200px] max-h-[200px] object-cover rounded"
                         onError={(e) => {
-                          e.currentTarget.style.display = "none"; // Hide the image if it fails to load
+                          e.currentTarget.style.display = "none";
+                          e.currentTarget.parentElement!.innerHTML +=
+                            '<p class="text-red-500">Failed to load image</p>';
                         }}
                       />
                     ) : (

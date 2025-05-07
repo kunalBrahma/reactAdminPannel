@@ -25,14 +25,15 @@ const AdminAuthForm = ({ className }: { className?: string }) => {
     try {
       await login(email, password);
       toast.success("Admin login successful", {
-        description: "You are now logged in as an admin"
+        description: "You are now logged in as an admin",
       });
       navigate("/admin/dashboard");
     } catch (error) {
       toast.error("Admin login failed", {
-        description: error instanceof Error 
-          ? error.message 
-          : "An error occurred. Make sure your account is activated."
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred. Make sure your account is activated.",
       });
     } finally {
       setIsLoading(false);
@@ -53,12 +54,14 @@ const AdminAuthForm = ({ className }: { className?: string }) => {
     try {
       await signup(adminData);
       toast.success("Admin signup request submitted", {
-        description: "Your account has been created. Please wait for activation by a super admin."
+        description:
+          "Your account has been created. Please wait for activation by a super admin.",
       });
       setActiveTab("login");
     } catch (error) {
       toast.error("Admin signup failed", {
-        description: error instanceof Error ? error.message : "An error occurred"
+        description:
+          error instanceof Error ? error.message : "An error occurred",
       });
       console.error("Admin signup error:", error);
     } finally {
@@ -180,8 +183,8 @@ const AdminAuthForm = ({ className }: { className?: string }) => {
 
 export default function AdminLoginPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="flex min-h-screen flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <div className="flex items-center gap-2 font-medium">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -197,9 +200,13 @@ export default function AdminLoginPage() {
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
-        <div className="absolute inset-0 h-full w-full bg-gray-800 flex items-center justify-center">
-          <p className="text-gray-300 text-xl font-semibold">Admin Dashboard</p>
-        </div>
+        <img
+          src="https://images.unsplash.com/photo-1604762432718-b0cd3db01b18?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          width={100}
+          height={100}
+        />
       </div>
       <Toaster position="top-right" richColors />
     </div>

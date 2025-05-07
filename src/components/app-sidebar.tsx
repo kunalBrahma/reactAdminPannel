@@ -2,6 +2,7 @@
 import {
   BookOpen,
   GalleryVerticalEnd,
+  MessageCircleCodeIcon,
   SquareTerminal,
   Ticket,
   User,
@@ -20,7 +21,7 @@ import {
 // Sample data (remove user from here or keep for other uses)
 const data = {
   teams: [
-    { name: "Acme Inc", logo: GalleryVerticalEnd, plan: "Enterprise" },
+    { name: "City Home Service", logo: GalleryVerticalEnd, plan: "Admin" },
    
   ],
   navMain: [
@@ -56,6 +57,14 @@ const data = {
       items: [
         { title: "Profiles", url: "#" },
         { title: "Admin Request", url: "#" },
+      ],
+    },
+    {
+      title: "Messages",
+      url: "#",
+      icon: MessageCircleCodeIcon,
+      items: [
+        { title: "Contact Us", url: "#" },
       ],
     },
   ],

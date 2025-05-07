@@ -24,7 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Offering } from "@/types/offering";
-import { createOffering, updateOffering } from "@/api/offerings";
+import { createOffering, updateOffering, uploadImage } from "@/api/offerings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -54,26 +54,22 @@ const priceTableSchema = z.object({
 });
 
 // Main form schema
-// Update the main form schema to remove null types where not needed
 const formSchema = z.object({
-    service_code: z.string().min(1, "Service code is required"),
-    name: z.string().min(1, "Name is required"),
-    description: z.string().optional(),
-    icon: z.string().optional(),
-    price: z.string().optional(),
-    category: z.string().optional(),
-    subCategory: z.string().optional(),
-    image: z.string().optional(),
-    features: z.array(featureSchema).optional(),
-    requirements: z.array(requirementSchema).optional(),
-    exclusions: z.array(exclusionSchema).optional(),
-    pricetable: z.array(priceTableSchema).optional(),
-    popular: z.boolean(),
-    whatsapp_message: z.string().optional(),
-  });
-  
-  // Update the nested schemas as well
-  // (Removed duplicate declaration of featureSchema)
+  service_code: z.string().min(1, "Service code is required"),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  price: z.string().optional(),
+  category: z.string().optional(),
+  subCategory: z.string().optional(),
+  image: z.string().optional(),
+  features: z.array(featureSchema).optional(),
+  requirements: z.array(requirementSchema).optional(),
+  exclusions: z.array(exclusionSchema).optional(),
+  pricetable: z.array(priceTableSchema).optional(),
+  popular: z.boolean(),
+  whatsapp_message: z.string().optional(),
+});
 
 interface OfferingFormProps {
   open: boolean;
@@ -81,40 +77,37 @@ interface OfferingFormProps {
   offering?: Offering | null;
 }
 
-export function OfferingForm({
-  open,
-  onOpenChange,
-  offering,
-}: OfferingFormProps) {
+export function OfferingForm({ open, onOpenChange, offering }: OfferingFormProps) {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Parse JSON strings from offering data
-  const parseJsonField = <T,>(field: string | undefined, defaultValue: T): T => {
+  // Parse JSON fields safely
+  const parseJsonField = <T,>(field: string | undefined | null, defaultValue: T): T => {
     if (!field) return defaultValue;
     try {
       const parsed = typeof field === "string" ? JSON.parse(field) : field;
-      // Convert null values to empty strings
       if (Array.isArray(parsed)) {
-        return parsed.map(item => {
-          const newItem = {...item};
-          for (const key in newItem) {
-            if (newItem[key] === null) {
-              newItem[key] = "";
-            }
-          }
-          return newItem;
-        }) as T;
+        return parsed.map((item) => ({
+          ...item,
+          desc: item.desc ?? "",
+          icon: item.icon ?? "",
+          label: item.label ?? "",
+          bhk: item.bhk ?? "",
+          time: item.time ?? "",
+          price: item.price ?? "",
+        })) as T;
       }
-      return parsed;
+      return defaultValue;
     } catch (error) {
       console.error("Error parsing JSON field:", error);
       return defaultValue;
     }
   };
 
-  // Form initialization with default values
+  // Form initialization
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -138,6 +131,12 @@ export function OfferingForm({
   // Reset form when offering changes
   useEffect(() => {
     if (open && offering) {
+      const imageUrl = offering.image?.startsWith("http")
+        ? offering.image
+        : offering.image
+        ? `http://localhost:5173${offering.image}`
+        : null;
+      setImagePreview(imageUrl);
       form.reset({
         service_code: offering.service_code || "",
         name: offering.name || "",
@@ -151,10 +150,11 @@ export function OfferingForm({
         requirements: parseJsonField(offering.requirements, [{ icon: "", label: "" }]),
         exclusions: parseJsonField(offering.exclusions, [{ icon: "", label: "" }]),
         pricetable: parseJsonField(offering.pricetable, []),
-        popular: Number(offering.popular) === 1,
+        popular: !!offering.popular, // Handle various formats (1, true, "1")
         whatsapp_message: offering.whatsapp_message || "",
       });
     } else if (open && !offering) {
+      setImagePreview(null);
       form.reset({
         service_code: "",
         name: "",
@@ -202,7 +202,6 @@ export function OfferingForm({
   // Mutations
   const createMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
-      // Convert arrays to JSON strings before sending
       const formattedData = {
         ...data,
         features: data.features?.length ? JSON.stringify(data.features) : undefined,
@@ -226,7 +225,6 @@ export function OfferingForm({
   const updateMutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
       if (!offering) throw new Error("No offering to update");
-      // Convert arrays to JSON strings before sending
       const formattedData = {
         ...data,
         features: data.features?.length ? JSON.stringify(data.features) : undefined,
@@ -268,24 +266,39 @@ export function OfferingForm({
     if (featureFields.length === 0) addEmptyFeature();
     if (requirementFields.length === 0) addEmptyRequirement();
     if (exclusionFields.length === 0) addEmptyExclusion();
-    
+
     if (
       form.getValues("category") === "Cleaning Services" &&
-      (form.getValues("subCategory") === "Full Home" ||
-        form.getValues("subCategory") === "Empty Home") &&
+      (form.getValues("subCategory") === "Full Home" || form.getValues("subCategory") === "Empty Home") &&
       priceTableFields.length === 0
     ) {
       addEmptyPriceTable();
     }
-  }, [form.watch("category"), form.watch("subCategory")]);
+  }, [form.watch("category"), form.watch("subCategory"), featureFields.length, requirementFields.length, exclusionFields.length, priceTableFields.length]);
+
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await uploadImage(formData);
+      form.setValue("image", response.path);
+      setImagePreview(`http://localhost:5173${response.path}`);
+      toast.success("Image uploaded successfully");
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {offering ? "Edit Offering" : "Create New Offering"}
-          </DialogTitle>
+          <DialogTitle>{offering ? "Edit Offering" : "Create New Offering"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -302,8 +315,8 @@ export function OfferingForm({
               {/* Basic Information Tab */}
               <TabsContent value="basic" className="mt-10 md:mt-0">
                 <Card>
-                  <CardContent className="pt-4 ">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <CardContent className="pt-4">
+                    <div className="grid  md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="service_code"
@@ -378,10 +391,7 @@ export function OfferingForm({
                               <FormLabel className="text-base">Popular</FormLabel>
                             </div>
                             <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                           </FormItem>
                         )}
@@ -402,14 +412,30 @@ export function OfferingForm({
                       <FormField
                         control={form.control}
                         name="image"
-                        render={({ field }) => (
+                        render={({ }) => (
                           <FormItem>
-                            <FormLabel>Image URL</FormLabel>
+                            <FormLabel>Image</FormLabel>
                             <FormControl>
-                              <Input
-                                placeholder="https://example.com/image.jpg"
-                                {...field}
-                              />
+                              <div className="space-y-2">
+                                {imagePreview && (
+                                  <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-32 h-32 object-cover rounded"
+                                  />
+                                )}
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={isUploading}
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      handleImageUpload(e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                                {isUploading && <p>Uploading...</p>}
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -489,7 +515,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Icon</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="FaCheckCircle" {...field} value={field.value || ""} />
+                                  <Input placeholder="FaCheckCircle" {...field} value={field.value ?? ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -505,7 +531,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Short Description</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Basic" {...field} value={field.value || ""} />
+                                  <Input placeholder="Basic" {...field} value={field.value ?? ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -521,10 +547,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Label</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Feature description"
-                                    {...field}
-                                  />
+                                  <Input placeholder="Feature description" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -554,9 +577,7 @@ export function OfferingForm({
                 <Card>
                   <CardContent className="pt-4">
                     <div className="flex justify-between items-center mb-4">
-                      <Label className="text-lg font-semibold">
-                        Requirements
-                      </Label>
+                      <Label className="text-lg font-semibold">Requirements</Label>
                       <Button
                         type="button"
                         variant="outline"
@@ -580,7 +601,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Icon</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Icon name" {...field} value={field.value || ""}/>
+                                  <Input placeholder="Icon name" {...field} value={field.value ?? ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -596,10 +617,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Label</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Requirement description"
-                                    {...field}
-                                  />
+                                  <Input placeholder="Requirement description" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -653,7 +671,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Icon</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Icon name" {...field} value={field.value || ""}/>
+                                  <Input placeholder="Icon name" {...field} value={field.value ?? ""} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -669,10 +687,7 @@ export function OfferingForm({
                               <FormItem>
                                 <FormLabel>Label</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Exclusion description"
-                                    {...field}
-                                  />
+                                  <Input placeholder="Exclusion description" {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -807,8 +822,7 @@ export function OfferingForm({
                       </>
                     ) : (
                       <div className="text-center py-8 text-gray-500">
-                        Price table is only required for Full Home and Empty
-                        Home services.
+                        Price table is only required for Full Home and Empty Home services.
                       </div>
                     )}
                   </CardContent>
@@ -817,14 +831,10 @@ export function OfferingForm({
             </Tabs>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || isUploading}>
                 {isLoading ? "Saving..." : offering ? "Update" : "Create"}
               </Button>
             </div>
