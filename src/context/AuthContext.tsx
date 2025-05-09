@@ -48,7 +48,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = '/api';
 
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_token');

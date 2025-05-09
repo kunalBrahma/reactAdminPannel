@@ -95,7 +95,7 @@ const ContactUs: React.FC = () => {
     if (!token) return;
     try {
       const response: AxiosResponse<ContactsResponse> = await axios.get(
-        "http://localhost:5000/api/contact",
+        "/api/api/contact",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -124,7 +124,7 @@ const ContactUs: React.FC = () => {
     if (!token) return;
     try {
       const response: AxiosResponse<DeleteResponse> = await axios.delete(
-        `http://localhost:5000/api/contact/${contactId}`,
+        `/api/api/contact/${contactId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

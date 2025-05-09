@@ -285,7 +285,7 @@ const HistoryTable: React.FC = () => {
     const fetchOrders = async () => {
       try {
         const response: AxiosResponse<{ orders: Order[] }> = await axios.get(
-          "http://localhost:5000/api/orders"
+          "/api/api/orders"
         );
         setOrders(response.data.orders);
         setLoading(false);

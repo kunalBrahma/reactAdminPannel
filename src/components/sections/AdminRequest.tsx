@@ -85,7 +85,7 @@ const AdminRequest: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get<ApiResponse<User>>('http://localhost:5000/api/users', {
+        const response = await axios.get<ApiResponse<User>>('/api/api/users', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Fetched users:', response.data.users);
@@ -141,7 +141,7 @@ const AdminRequest: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.post<ApiResponse<User>>(
-        'http://localhost:5000/api/users',
+        '/api/api/users',
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -167,7 +167,7 @@ const AdminRequest: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.put<ApiResponse<User>>(
-        `http://localhost:5000/api/users/${selectedUser.id}`,
+        `/api/api/users/${selectedUser.id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -194,7 +194,7 @@ const AdminRequest: React.FC = () => {
       setError(null);
       setSuccess(null);
 
-      await axios.delete(`http://localhost:5000/api/users/${id}`, {
+      await axios.delete(`/api/api/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -216,7 +216,7 @@ const AdminRequest: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.patch<ApiResponse<User>>(
-        `http://localhost:5000/api/users/${user.id}/status`,
+        `/api/api/users/${user.id}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

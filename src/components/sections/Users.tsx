@@ -76,7 +76,7 @@ const Users: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get<ApiResponse<Profile>>('http://localhost:5000/api/profiles', {
+        const response = await axios.get<ApiResponse<Profile>>('/api/api/profiles', {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('Fetched profiles:', response.data.profiles);
@@ -129,7 +129,7 @@ const Users: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.post<ApiResponse<Profile>>(
-        'http://localhost:5000/api/profiles',
+        '/api/api/profiles',
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -155,7 +155,7 @@ const Users: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.put<ApiResponse<Profile>>(
-        `http://localhost:5000/api/profiles/${selectedProfile.id}`,
+        `/api/api/profiles/${selectedProfile.id}`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -182,7 +182,7 @@ const Users: React.FC = () => {
       setError(null);
       setSuccess(null);
 
-      await axios.delete(`http://localhost:5000/api/profiles/${id}`, {
+      await axios.delete(`/api/api/profiles/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

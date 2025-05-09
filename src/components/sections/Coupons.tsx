@@ -43,7 +43,7 @@ import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useAdminAuth } from "@/context/AuthContext";
 
 // Define the API URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Interfaces
 interface RawCoupon {

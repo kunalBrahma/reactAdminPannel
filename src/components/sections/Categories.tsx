@@ -49,7 +49,7 @@ const Categories = () => {
   // Fetch data
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/main/all');
+      const response = await axios.get('/api/api/main/all');
       setData(response.data);
       setLoading(false);
     } catch (err) {
@@ -168,7 +168,7 @@ const Categories = () => {
   // Create new service
   const handleCreate = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/main', formData);
+      const response = await axios.post('/api/api/main', formData);
       setData([response.data.service, ...data]);
       setFormData({
         category: '',
@@ -201,7 +201,7 @@ const Categories = () => {
   // Update service
   const handleUpdate = async () => {
     try {
-      const response = await axios.put(`http://localhost:5000/api/main/${editingId}`, formData);
+      const response = await axios.put(`/api/api/main/${editingId}`, formData);
       setData(data.map(item => 
         item.id === editingId ? response.data.service : item
       ));
@@ -225,7 +225,7 @@ const Categories = () => {
   // Delete - Fixed to remove item from the UI immediately
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/main/${id}`);
+      await axios.delete(`/api/api/main/${id}`);
       // Remove the item from the data array instead of just updating status
       setData(data.filter(item => item.id !== id));
     } catch (err) {

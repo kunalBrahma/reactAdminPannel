@@ -134,7 +134,7 @@ export function OfferingForm({ open, onOpenChange, offering }: OfferingFormProps
       const imageUrl = offering.image?.startsWith("http")
         ? offering.image
         : offering.image
-        ? `http://localhost:5173${offering.image}`
+        ? `/api${offering.image}`
         : null;
       setImagePreview(imageUrl);
       form.reset({
@@ -284,7 +284,7 @@ export function OfferingForm({ open, onOpenChange, offering }: OfferingFormProps
       formData.append("file", file);
       const response = await uploadImage(formData);
       form.setValue("image", response.path);
-      setImagePreview(`http://localhost:5173${response.path}`);
+      setImagePreview(`/api${response.path}`);
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Image upload error:", error);

@@ -95,7 +95,7 @@ const UpdateBooking: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await axios.get<ApiResponse<Order>>('http://localhost:5000/api/orders', {
+        const response = await axios.get<ApiResponse<Order>>('/api/api/orders', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -176,7 +176,7 @@ const UpdateBooking: React.FC = () => {
       setSuccess(null);
 
       const response = await axios.put<ApiResponse<Order>>(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+        `/api/api/orders/${orderId}/status`,
         { status: newStatus },
         {
           headers: {

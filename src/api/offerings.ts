@@ -1,7 +1,7 @@
 import { Offering, OfferingFormValues } from "@/types/offering";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "/api/api";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("admin_token"); // Match AdminAuthContext key

@@ -27,7 +27,7 @@ const DashboardOverview = () => {
     const fetchDashboardData = async () => {
       try {
         // Fetch orders using the same endpoint as the History table
-        const response = await fetch("http://localhost:5000/api/orders");
+        const response = await fetch("/api/api/orders");
         
         if (!response.ok) {
           throw new Error("Failed to fetch orders");
