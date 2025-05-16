@@ -15,7 +15,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import History from "./History";
 import { JSX } from "react/jsx-runtime";
 import DashboardOverview from "@/components/sections/DashboardOverview";
 import Categories from "@/components/sections/Categories";
@@ -25,6 +24,7 @@ import Users from "@/components/sections/Users";
 import AdminRequest from "@/components/sections/AdminRequest";
 import ConatctUs from "@/components/sections/ConatctUs";
 import Coupons from "@/components/sections/Coupons";
+import HistoryTable from "@/components/sections/HistoryTable";
 
 // Define your content components
 const DefaultContent = () => <DashboardOverview />;
@@ -67,7 +67,7 @@ export default function Page() {
 
   // Content mapping for sub-items
   const contentMap: Record<string, JSX.Element> = {
-    Bookings: <History />,
+    Bookings: <HistoryTable />,
     "Add Services": <ServicesSecction />,
     "Add Categories": <Categories />,
     "Update Booking Status": <UpdateBooking />,

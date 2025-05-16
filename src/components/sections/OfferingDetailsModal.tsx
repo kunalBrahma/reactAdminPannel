@@ -1,4 +1,3 @@
-// OfferingDetailsModal.tsx
 import {
   Dialog,
   DialogContent,
@@ -42,6 +41,13 @@ export function OfferingDetailsModal({
   const exclusions = parseJsonField(offering.exclusions, []);
   const pricetable = parseJsonField(offering.pricetable, []);
 
+  // Construct image URL (same as preview logic)
+  const imageUrl = offering.image?.startsWith("http")
+    ? offering.image
+    : offering.image
+    ? `/api${offering.image}`
+    : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh]">
@@ -83,15 +89,14 @@ export function OfferingDetailsModal({
                   </div>
                   <div>
                     <Label className="font-semibold">Image</Label>
-                    {offering.image ? (
+                    {imageUrl ? (
                       <img
-                        src={offering.image}
+                        src={imageUrl}
                         alt="Service Image"
                         className="mt-2 max-w-[200px] max-h-[200px] object-cover rounded"
                         onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement!.innerHTML +=
-                            '<p class="text-red-500">Failed to load image</p>';
+                          console.error("Failed to load image:", imageUrl);
+                          e.currentTarget.src = "/default-image.jpg"; // Fallback image
                         }}
                       />
                     ) : (

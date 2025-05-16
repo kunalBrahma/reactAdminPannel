@@ -100,7 +100,7 @@ const UpdateBooking: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Fetched orders:', response.data.orders);
+        
         // Parse numeric fields to numbers
         const parsedOrders = (response.data.orders || []).map(order => ({
           ...order,
@@ -113,7 +113,7 @@ const UpdateBooking: React.FC = () => {
         setFilteredOrders(parsedOrders); // Initialize filteredOrders
         setError(null);
       } catch (err) {
-        const errorMessage = (err as AxiosError<ErrorResponse>).response?.data?.message || 'Failed to fetch orders. Please try again.';
+        const errorMessage = (err as AxiosError<ErrorResponse>).response?.data?.message || 'Failed to fetch booking. Please try again.';
         setError(errorMessage);
         console.error('Error fetching orders:', err);
       } finally {
@@ -209,7 +209,7 @@ const UpdateBooking: React.FC = () => {
         )
       );
 
-      setSuccess(`Order ${updatedOrder.order_number} status updated to ${newStatus}`);
+      setSuccess(`Booking ${updatedOrder.order_number} status updated to ${newStatus}`);
       setNewStatuses(prev => ({ ...prev, [orderId]: '' })); // Clear selection
     } catch (err) {
       const errorResponse = (err as AxiosError<ErrorResponse>).response;
@@ -224,7 +224,7 @@ const UpdateBooking: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Update Order Status
+        Update Booking Status
       </Typography>
 
       {/* Search Bar */}
@@ -254,7 +254,7 @@ const UpdateBooking: React.FC = () => {
 
       {!loading && !authLoading && filteredOrders.length === 0 && (
         <Typography>
-          {searchQuery ? 'No orders match your search.' : 'No orders found.'}
+          {searchQuery ? 'No booking match your search.' : 'No booking found.'}
         </Typography>
       )}
 
@@ -263,7 +263,7 @@ const UpdateBooking: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Order Number</TableCell>
+                <TableCell>Booking Number</TableCell>
                 <TableCell>Customer</TableCell>
                 <TableCell>Total</TableCell>
                 <TableCell>Current Status</TableCell>

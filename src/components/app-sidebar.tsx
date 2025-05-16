@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { TeamSwitcher } from "./team-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +21,6 @@ import {
 const data = {
   teams: [
     { name: "City Home Service", logo: GalleryVerticalEnd, plan: "Admin" },
-   
   ],
   navMain: [
     {
@@ -63,9 +61,7 @@ const data = {
       title: "Messages",
       url: "#",
       icon: MessageCircleCodeIcon,
-      items: [
-        { title: "Contact Us", url: "#" },
-      ],
+      items: [{ title: "Contact Us", url: "#" }],
     },
   ],
 };
@@ -79,7 +75,15 @@ export function AppSidebar({ onItemClick, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <div className="flex gap-2 items-center p-2">
+          <div className="bg-black flex items-center justify-center rounded-xl p-2">
+            <GalleryVerticalEnd className=" text-white" />
+          </div>
+          <div>
+            <p className="font-medium">City Home Service</p>
+            <p className="text-sm text-muted-foreground">Admin</p>
+          </div>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} onItemClick={onItemClick} />

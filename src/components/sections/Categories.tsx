@@ -31,20 +31,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAdminAuth } from '@/context/AuthContext';// Adjust the import path as needed
 
 const Categories = () => {
-  interface Service {
-    id: string;
-    category: string;
-    subCategory?: string;
-    icon?: string;
-    path?: string;
-    status: string;
-    createdAt: string;
-  }
-
-  const [data, setData] = useState<Service[]>([]);
+  const [data, setData] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState(null);
@@ -57,20 +46,10 @@ const Categories = () => {
     status: 'Active'
   });
 
-  // Import the admin authentication context
-  const { token, isAuthenticated, loading: authLoading } = useAdminAuth();
-
-  // Create axios instance with authentication headers
-  const authAxios = axios.create({
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
   // Fetch data
   const fetchData = async () => {
     try {
-      const response = await authAxios.get('/api/api/main/all');
+      const response = await axios.get('/api/api/main/all');
       setData(response.data);
       setLoading(false);
     } catch (err) {
@@ -84,13 +63,20 @@ const Categories = () => {
   };
 
   useEffect(() => {
-    // Only fetch data if authenticated and auth loading is complete
-    if (isAuthenticated && !authLoading) {
-      fetchData();
-    }
-  }, [isAuthenticated, authLoading]);
+    fetchData();
+  }, []);
 
   // Table columns definition
+  type RowData = {
+    id: string;
+    category: string;
+    subCategory?: string;
+    icon?: string;
+    path?: string;
+    createdAt: string;
+    status: string;
+  };
+
   const columns = [
     {
       accessorKey: 'id',
@@ -103,29 +89,29 @@ const Categories = () => {
     {
       accessorKey: 'subCategory',
       header: 'Sub Category',
-      cell: ({ row }: { row: { original: Service } }) => row.original.subCategory || '-',
+      cell: ({ row }: { row: { original: RowData } }) => row.original.subCategory || '-',
     },
     {
       accessorKey: 'icon',
       header: 'Icon',
-      cell: ({ row }: { row: { original: Service } }) => row.original.icon || '-',
+      cell: ({ row }: { row: { original: RowData } }) => row.original.icon || '-',
     },
     {
       accessorKey: 'path',
       header: 'Path',
-      cell: ({ row }: { row: { original: Service } }) => row.original.path || '-',
+      cell: ({ row }: { row: { original: RowData } }) => row.original.path || '-',
     },
     {
       accessorKey: 'createdAt',
       header: 'Created At',
-      cell: ({ row }: { row: { original: Service } }) => new Date(row.original.createdAt).toLocaleDateString(),
+      cell: ({ row }: { row: { original: RowData } }) => new Date(row.original.createdAt).toLocaleDateString(),
     },
     {
       id: 'actions',
       header: 'Actions',
-      cell: ({ row }: { row: { original: Service } }) => (
+      cell: ({ row }: { row: { original: RowData } }) => (
         <div className="flex space-x-2">
-          <Button 
+            <Button 
             variant="outline" 
             size="sm" 
             onClick={() => startEditing({
@@ -136,9 +122,9 @@ const Categories = () => {
               path: row.original.path || '',
               status: row.original.status
             })}
-          >
+            >
             <Edit className="h-4 w-4" />
-          </Button>
+            </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -182,7 +168,7 @@ const Categories = () => {
   // Create new service
   const handleCreate = async () => {
     try {
-      const response = await authAxios.post('/api/api/main', formData);
+      const response = await axios.post('/api/api/main', formData);
       setData([response.data.service, ...data]);
       setFormData({
         category: '',
@@ -201,7 +187,7 @@ const Categories = () => {
   };
 
   // Start editing
-  const startEditing = (item: { id: any; category: any; subCategory: any; icon: any; path: any; status: any; }) => {
+  const startEditing = (item: { id: any; category: any; subCategory: any; icon: any; path: any; createdAt?: string; status: any; }) => {
     setEditingId(item.id);
     setFormData({
       category: item.category,
@@ -215,7 +201,7 @@ const Categories = () => {
   // Update service
   const handleUpdate = async () => {
     try {
-      const response = await authAxios.put(`/api/api/main/${editingId}`, formData);
+      const response = await axios.put(`/api/api/main/${editingId}`, formData);
       setData(data.map(item => 
         item.id === editingId ? response.data.service : item
       ));
@@ -239,7 +225,7 @@ const Categories = () => {
   // Delete - Fixed to remove item from the UI immediately
   const handleDelete = async (id: string) => {
     try {
-      await authAxios.delete(`/api/api/main/${id}`);
+      await axios.delete(`/api/api/main/${id}`);
       // Remove the item from the data array instead of just updating status
       setData(data.filter(item => item.id !== id));
     } catch (err) {
@@ -250,14 +236,6 @@ const Categories = () => {
       }
     }
   };
-
-  // Show loading if auth is still loading
-  if (authLoading) return <div>Loading authentication...</div>;
-  
-  // Redirect if not authenticated (you might want to handle this differently)
-  if (!isAuthenticated) {
-    return <div>Please log in to access this page</div>;
-  }
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
