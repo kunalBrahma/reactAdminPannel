@@ -139,6 +139,7 @@ const HistoryTable: React.FC = () => {
     isOpen: false,
     mode: null,
   });
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Fetch orders and services
   const fetchOrders = async (): Promise<void> => {
@@ -216,22 +217,32 @@ const HistoryTable: React.FC = () => {
   // Handle edit order
   const handleEditOrder = async (): Promise<void> => {
     if (!selectedOrder) return;
+    setIsSaving(true); // Start loading
     try {
-      await axios.put(`/api/api/orders/${selectedOrder.order_id}`, {
-        first_name: selectedOrder.first_name,
-        last_name: selectedOrder.last_name,
-        guest_email: selectedOrder.guest_email,
-        guest_phone: selectedOrder.guest_phone,
-        address_line1: selectedOrder.address_line1,
-        address_line2: selectedOrder.address_line2,
-        city: selectedOrder.city,
-        state: selectedOrder.state,
-        zip_code: selectedOrder.zip_code,
-        status: selectedOrder.status,
-      });
+      const response = await axios.put(
+        `/api/api/orders/${selectedOrder.order_id}`,
+        {
+          first_name: selectedOrder.first_name,
+          last_name: selectedOrder.last_name,
+          guest_email: selectedOrder.guest_email,
+          guest_phone: selectedOrder.guest_phone,
+          address_line1: selectedOrder.address_line1,
+          address_line2: selectedOrder.address_line2,
+          city: selectedOrder.city,
+          state: selectedOrder.state,
+          zip_code: selectedOrder.zip_code,
+          status: selectedOrder.status,
+        }
+      );
 
-      // Refresh orders
-      await fetchOrders();
+      // Update orders state with the response data
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.order_id === selectedOrder.order_id
+            ? { ...order, ...response.data.order }
+            : order
+        )
+      );
 
       toast.success("Booking updated successfully");
 
@@ -241,9 +252,12 @@ const HistoryTable: React.FC = () => {
         mode: "view",
       });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || "Failed to update order";
+      const errorMessage =
+        err.response?.data?.message || "Failed to update order";
       setError(errorMessage);
       toast.error(errorMessage);
+    } finally {
+      setIsSaving(false); // Stop loading
     }
   };
 
@@ -277,7 +291,9 @@ const HistoryTable: React.FC = () => {
   const handleRemoveItem = async (itemId: number): Promise<void> => {
     if (!selectedOrder) return;
     try {
-      await axios.delete(`/api/api/orders/${selectedOrder.order_id}/items/${itemId}`);
+      await axios.delete(
+        `/api/api/orders/${selectedOrder.order_id}/items/${itemId}`
+      );
 
       // Refresh items and orders
       await Promise.all([
@@ -287,7 +303,8 @@ const HistoryTable: React.FC = () => {
 
       toast.success("Item removed successfully");
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || "Failed to remove item";
+      const errorMessage =
+        err.response?.data?.message || "Failed to remove item";
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -295,7 +312,10 @@ const HistoryTable: React.FC = () => {
 
   // Calculate totals for the order
   const calculateSubtotal = (): number => {
-    return orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
   };
 
   const calculateTotal = (): number => {
@@ -339,7 +359,9 @@ const HistoryTable: React.FC = () => {
       accessorKey: "customer",
       header: () => <div>Customer</div>,
       accessorFn: (row) => `${row.first_name} ${row.last_name}`,
-      cell: ({ row }) => <div className="truncate">{row.getValue("customer")}</div>,
+      cell: ({ row }) => (
+        <div className="truncate">{row.getValue("customer")}</div>
+      ),
       meta: { minWidth: "120px", maxWidth: "200px" },
     },
     {
@@ -420,9 +442,9 @@ const HistoryTable: React.FC = () => {
       accessorKey: "address",
       header: () => <div>Address</div>,
       accessorFn: (row) =>
-        `${row.address_line1}${row.address_line2 ? ", " + row.address_line2 : ""}, ${row.city}, ${
-          row.state
-        }, ${row.zip_code}`,
+        `${row.address_line1}${
+          row.address_line2 ? ", " + row.address_line2 : ""
+        }, ${row.city}, ${row.state}, ${row.zip_code}`,
       cell: ({ getValue }) => {
         const address: string = getValue();
         return (
@@ -572,16 +594,25 @@ const HistoryTable: React.FC = () => {
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
-                    const meta: ColumnMeta = (header.column.columnDef.meta || {}) as ColumnMeta;
+                    const meta: ColumnMeta = (header.column.columnDef.meta ||
+                      {}) as ColumnMeta;
                     return (
                       <TableHead
                         key={header.id}
-                        className={`${meta.hideOnMobile ? "hidden sm:table-cell" : ""} p-4`}
-                        style={{ minWidth: meta.minWidth, maxWidth: meta.maxWidth }}
+                        className={`${
+                          meta.hideOnMobile ? "hidden sm:table-cell" : ""
+                        } p-4`}
+                        style={{
+                          minWidth: meta.minWidth,
+                          maxWidth: meta.maxWidth,
+                        }}
                       >
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                       </TableHead>
                     );
                   })}
@@ -596,14 +627,23 @@ const HistoryTable: React.FC = () => {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => {
-                      const meta: ColumnMeta = (cell.column.columnDef.meta || {}) as ColumnMeta;
+                      const meta: ColumnMeta = (cell.column.columnDef.meta ||
+                        {}) as ColumnMeta;
                       return (
                         <TableCell
                           key={cell.id}
-                          className={`${meta.hideOnMobile ? "hidden sm:table-cell" : ""} p-4`}
-                          style={{ minWidth: meta.minWidth, maxWidth: meta.maxWidth }}
+                          className={`${
+                            meta.hideOnMobile ? "hidden sm:table-cell" : ""
+                          } p-4`}
+                          style={{
+                            minWidth: meta.minWidth,
+                            maxWidth: meta.maxWidth,
+                          }}
                         >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
                         </TableCell>
                       );
                     })}
@@ -611,7 +651,10 @@ const HistoryTable: React.FC = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No booking found.
                   </TableCell>
                 </TableRow>
@@ -643,7 +686,8 @@ const HistoryTable: React.FC = () => {
                   {format(new Date(selectedOrder.created_at), "MMM dd, yyyy")}
                 </div>
                 <div>
-                  <strong>Customer:</strong> {selectedOrder.first_name} {selectedOrder.last_name}
+                  <strong>Customer:</strong> {selectedOrder.first_name}{" "}
+                  {selectedOrder.last_name}
                 </div>
                 <div>
                   <strong>Email:</strong> {selectedOrder.guest_email || "N/A"}
@@ -704,14 +748,21 @@ const HistoryTable: React.FC = () => {
                 </div>
                 <div>
                   <strong>Address:</strong> {selectedOrder.address_line1}
-                  {selectedOrder.address_line2 ? `, ${selectedOrder.address_line2}` : ""},{" "}
-                  {selectedOrder.city}, {selectedOrder.state}, {selectedOrder.zip_code}
+                  {selectedOrder.address_line2
+                    ? `, ${selectedOrder.address_line2}`
+                    : ""}
+                  , {selectedOrder.city}, {selectedOrder.state},{" "}
+                  {selectedOrder.zip_code}
                 </div>
                 <div className="flex justify-between mt-6">
                   <Button variant="outline" onClick={handleCloseModal}>
                     Close
                   </Button>
-                  <Button onClick={() => setModalState({ isOpen: true, mode: "edit" })}>
+                  <Button
+                    onClick={() =>
+                      setModalState({ isOpen: true, mode: "edit" })
+                    }
+                  >
                     Edit Booking
                   </Button>
                 </div>
@@ -723,20 +774,30 @@ const HistoryTable: React.FC = () => {
                 {/* Order Details Form */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium">First Name</label>
+                    <label className="block text-sm font-medium">
+                      First Name
+                    </label>
                     <Input
                       value={selectedOrder.first_name}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, first_name: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          first_name: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Last Name</label>
+                    <label className="block text-sm font-medium">
+                      Last Name
+                    </label>
                     <Input
                       value={selectedOrder.last_name}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, last_name: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          last_name: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -745,7 +806,10 @@ const HistoryTable: React.FC = () => {
                     <Input
                       value={selectedOrder.guest_email || ""}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, guest_email: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          guest_email: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -754,25 +818,38 @@ const HistoryTable: React.FC = () => {
                     <Input
                       value={selectedOrder.guest_phone || ""}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, guest_phone: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          guest_phone: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Address Line 1</label>
+                    <label className="block text-sm font-medium">
+                      Address Line 1
+                    </label>
                     <Input
                       value={selectedOrder.address_line1}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, address_line1: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          address_line1: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Address Line 2</label>
+                    <label className="block text-sm font-medium">
+                      Address Line 2
+                    </label>
                     <Input
                       value={selectedOrder.address_line2 || ""}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, address_line2: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          address_line2: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -781,7 +858,10 @@ const HistoryTable: React.FC = () => {
                     <Input
                       value={selectedOrder.city}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, city: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          city: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -790,16 +870,24 @@ const HistoryTable: React.FC = () => {
                     <Input
                       value={selectedOrder.state}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, state: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          state: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium">Zip Code</label>
+                    <label className="block text-sm font-medium">
+                      Zip Code
+                    </label>
                     <Input
                       value={selectedOrder.zip_code}
                       onChange={(e) =>
-                        setSelectedOrder({ ...selectedOrder, zip_code: e.target.value })
+                        setSelectedOrder({
+                          ...selectedOrder,
+                          zip_code: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -878,11 +966,17 @@ const HistoryTable: React.FC = () => {
                   {/* Add New Item */}
                   <div className="mt-4 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium">Service</label>
+                      <label className="block text-sm font-medium">
+                        Service
+                      </label>
                       <Select
                         value={newItem.service_code}
                         onValueChange={(value) =>
-                          setNewItem({ ...newItem, service_code: value, bhk: "" })
+                          setNewItem({
+                            ...newItem,
+                            service_code: value,
+                            bhk: "",
+                          })
                         }
                       >
                         <SelectTrigger>
@@ -894,17 +988,21 @@ const HistoryTable: React.FC = () => {
                               key={service.service_code}
                               value={service.service_code}
                             >
-                              {service.name} ({service.price}) - {service.category}
+                              {service.name} ({service.price}) -{" "}
+                              {service.category}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     {newItem.service_code &&
-                      services.find((s) => s.service_code === newItem.service_code)
-                        ?.pricetable && (
+                      services.find(
+                        (s) => s.service_code === newItem.service_code
+                      )?.pricetable && (
                         <div>
-                          <label className="block text-sm font-medium">BHK</label>
+                          <label className="block text-sm font-medium">
+                            BHK
+                          </label>
                           <Select
                             value={newItem.bhk}
                             onValueChange={(value) =>
@@ -916,7 +1014,9 @@ const HistoryTable: React.FC = () => {
                             </SelectTrigger>
                             <SelectContent>
                               {services
-                                .find((s) => s.service_code === newItem.service_code)
+                                .find(
+                                  (s) => s.service_code === newItem.service_code
+                                )
                                 ?.pricetable?.map((pt) => (
                                   <SelectItem key={pt.bhk} value={pt.bhk}>
                                     {pt.bhk} ({pt.price})
@@ -927,7 +1027,9 @@ const HistoryTable: React.FC = () => {
                         </div>
                       )}
                     <div>
-                      <label className="block text-sm font-medium">Quantity</label>
+                      <label className="block text-sm font-medium">
+                        Quantity
+                      </label>
                       <Input
                         type="number"
                         min="1"
@@ -941,8 +1043,9 @@ const HistoryTable: React.FC = () => {
                       onClick={handleAddItem}
                       disabled={
                         !newItem.service_code ||
-                        (services.find((s) => s.service_code === newItem.service_code)
-                          ?.pricetable &&
+                        (services.find(
+                          (s) => s.service_code === newItem.service_code
+                        )?.pricetable &&
                           !newItem.bhk)
                       }
                     >
@@ -952,10 +1055,16 @@ const HistoryTable: React.FC = () => {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={handleCloseModal}>
+                  <Button
+                    variant="outline"
+                    onClick={handleCloseModal}
+                    disabled={isSaving}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleEditOrder}>Save Changes</Button>
+                  <Button onClick={handleEditOrder} disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </Button>
                 </div>
               </div>
             )}
@@ -975,7 +1084,9 @@ const HistoryTable: React.FC = () => {
                 onValueChange={(value) => table.setPageSize(Number(value))}
               >
                 <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={table.getState().pagination.pageSize} />
+                  <SelectValue
+                    placeholder={table.getState().pagination.pageSize}
+                  />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[5, 10, 20, 30, 40, 50].map((pageSize) => (
@@ -987,7 +1098,8 @@ const HistoryTable: React.FC = () => {
               </Select>
             </div>
             <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount() || 1}
             </div>
             <div className="flex items-center space-x-2">
               <Button
